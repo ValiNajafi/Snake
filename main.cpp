@@ -19,7 +19,13 @@ struct SnakeSegment
 
 		auto size {block_size - 2*pad};
 
-		DrawRectangle(start_x, start_y, size, size, BLUE);
+		DrawRectangle(start_x, start_y, size, size, Fade(BLUE, 0.3f));
+	}
+
+	void move(int dx, int dy)
+	{
+		x += dx;
+		y += dy;
 	}
 };
 
@@ -32,6 +38,18 @@ struct Snake
 		for (unsigned int i = 0; i < segments.size(); ++i) {
 			segments[i].draw();
 		}
+	}
+
+	void move(int dx, int dy)
+	{
+		auto size {segments.size()};
+
+		for (unsigned int i = 0; i < (size-1); ++i) {
+			segments[i].x = segments[i+1].x;
+			segments[i].y = segments[i+1].y;
+		}
+
+		segments[size-1].move(dx, dy);
 	}
 };
 
@@ -50,6 +68,21 @@ int main(void)
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
+
+    	if (IsKeyPressed(KEY_DOWN))
+    	{
+    		my_snake.move(0, 1);
+    	} else if (IsKeyPressed(KEY_UP))
+    	{
+    		my_snake.move(0, -1);
+    	} else if (IsKeyPressed(KEY_LEFT))
+    	{
+    		my_snake.move(-1, 0);
+    	} else if (IsKeyPressed(KEY_RIGHT))
+    	{
+    		my_snake.move(1, 0);
+    	}
+
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
