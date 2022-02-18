@@ -3,7 +3,7 @@
 
 const int screen_width = 800;
 const int screen_height = 600;
-const int block_size = 10;
+const int block_size = 20;
 const int pad = 1;
 
 struct SnakeSegment
@@ -19,7 +19,7 @@ struct SnakeSegment
 
 		auto size {block_size - 2*pad};
 
-		DrawRectangle(start_x, start_y, size, size, Fade(BLUE, 0.3f));
+		DrawRectangle(start_x, start_y, size, size, Fade(BLUE, 0.4f));
 	}
 
 	void move(int dx, int dy)
@@ -79,6 +79,17 @@ struct Snake
 			speed_x = 1;
 		}
 	}
+
+	void grow(int num_segment)
+	{
+		auto head {segments.size() - 1};
+
+		SnakeSegment new_segment{ segments[head].x, segments[head].y};
+
+		for (int i = 0; i < num_segment; ++i) {
+			segments.push_back(new_segment);
+		}
+	}
 };
 
 int main(void)
@@ -86,7 +97,7 @@ int main(void)
     // Initialization
     //--------------------------------------------------------------------------------------
 
-	Snake my_snake {{{5,5}, {5,6}, {5,7}, {6,7} }, 1, 0};
+	Snake my_snake {{{5,5}}, 1, 0};
 
     InitWindow(screen_width, screen_height, "Snake!");
 
@@ -100,6 +111,14 @@ int main(void)
     {
 
     	frame_cnt++;
+
+    	if (IsKeyPressed(KEY_Q))
+    	{
+    		my_snake.grow(1);
+    	} else if (IsKeyPressed(KEY_W))
+    	{
+    		my_snake.grow(5);
+    	}
 
     	my_snake.process_key();
     	if (frame_cnt >=15)
