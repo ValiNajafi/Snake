@@ -3,7 +3,7 @@
 
 const int screen_width = 800;
 const int screen_height = 600;
-const int block_size = 50;
+const int block_size = 10;
 const int pad = 1;
 
 struct SnakeSegment
@@ -32,6 +32,8 @@ struct SnakeSegment
 struct Snake
 {
 	std::vector<SnakeSegment> segments;
+	int speed_x;
+	int speed_y;
 
 	void draw()
 	{
@@ -51,6 +53,32 @@ struct Snake
 
 		segments[size-1].move(dx, dy);
 	}
+
+	void do_move()
+	{
+		move(speed_x, speed_y);
+	}
+
+	void process_key()
+	{
+		if (IsKeyPressed(KEY_DOWN) && speed_y==0)
+		{
+			speed_y = 1;
+			speed_x = 0;
+		} else if (IsKeyPressed(KEY_UP) && speed_y ==0)
+		{
+			speed_y = -1;
+			speed_x = 0;
+		} else if (IsKeyPressed(KEY_LEFT) && speed_x ==0)
+		{
+			speed_y = 0;
+			speed_x = -1;
+		} else if (IsKeyPressed(KEY_RIGHT) && speed_x == 0)
+		{
+			speed_y = 0;
+			speed_x = 1;
+		}
+	}
 };
 
 int main(void)
@@ -58,31 +86,27 @@ int main(void)
     // Initialization
     //--------------------------------------------------------------------------------------
 
-	Snake my_snake {{ {1,2}, {2,2} , {3,2} , {3,3} }};
+	Snake my_snake {{{5,5}, {5,6}, {5,7}, {6,7} }, 1, 0};
 
     InitWindow(screen_width, screen_height, "Snake!");
 
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
+    int frame_cnt = 0;
+
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
 
-    	if (IsKeyPressed(KEY_DOWN))
-    	{
-    		my_snake.move(0, 1);
-    	} else if (IsKeyPressed(KEY_UP))
-    	{
-    		my_snake.move(0, -1);
-    	} else if (IsKeyPressed(KEY_LEFT))
-    	{
-    		my_snake.move(-1, 0);
-    	} else if (IsKeyPressed(KEY_RIGHT))
-    	{
-    		my_snake.move(1, 0);
-    	}
+    	frame_cnt++;
 
+    	my_snake.process_key();
+    	if (frame_cnt >=15)
+    	{
+			my_snake.do_move();
+			frame_cnt = 0;
+    	}
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
