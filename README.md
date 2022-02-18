@@ -1,10 +1,6 @@
-# Drawing Engine using Squares!
-Draw some shapes using small squares. 
+# Yet Another Snake Game
+Snake game based on Raylib library
 
-This code is based on https://github.com/AbdManian/RaylibSample
-
-## Supported Shapes
-![](shapes9.gif)
 
 ## How To Compile
 1. Import project in Eclipse/CDT.
