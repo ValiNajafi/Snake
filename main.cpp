@@ -138,7 +138,7 @@ int main(void)
 			if ((my_snake.segments[my_snake.segments.size()-1].x <=0)
 				or (my_snake.segments[my_snake.segments.size()-1].y <=0)
 				or (my_snake.segments[my_snake.segments.size()-1].x >= screen_width/block_size-1)
-				or (my_snake.segments[my_snake.segments.size()-1].y >= screen_height/block_size-1  ))
+				or (my_snake.segments[my_snake.segments.size()-1].y >= screen_height/block_size-1   ))
 			{
 				DrawText("Game Over, Press SPACE", 50 , screen_height - 200, 50, BLACK);
 				game_cnt++;
