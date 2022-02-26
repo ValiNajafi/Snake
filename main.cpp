@@ -11,7 +11,6 @@ struct SnakeSegment
 	int x;
 	int y;
 
-
 	void draw()
 	{
 		auto start_x {x * block_size + pad};
@@ -19,8 +18,17 @@ struct SnakeSegment
 
 		auto size {block_size - 2*pad};
 
-		DrawRectangle(start_x, start_y, size, size, Fade(BLUE, 0.4f));
+		DrawRectangle(start_x, start_y, size, size, Fade(BLUE, 0.5f));
 	}
+	void drawhead()
+		{
+			auto start_x {x * block_size + pad};
+			auto start_y {y * block_size + pad};
+
+			auto size {block_size - 2*pad};
+
+			DrawCircle(start_x+size/2, start_y+size/2, block_size/2, Fade(BLUE, 0.9f));
+		}
 
 	void move(int dx, int dy)
 	{
@@ -37,9 +45,10 @@ struct Snake
 
 	void draw()
 	{
-		for (unsigned int i = 0; i < segments.size(); ++i) {
+		for (unsigned int i = 0; i < segments.size()-1; ++i) {
 			segments[i].draw();
 		}
+		segments[segments.size()-1].drawhead();
 	}
 
 	void move(int dx, int dy)
@@ -82,9 +91,9 @@ struct Snake
 
 	void grow(int num_segment)
 	{
-		auto head {segments.size() - 1};
+		auto head_index {segments.size() - 1};
 
-		SnakeSegment new_segment{ segments[head].x, segments[head].y};
+		SnakeSegment new_segment{ segments[head_index].x, segments[head_index].y};
 
 		for (int i = 0; i < num_segment; ++i) {
 			segments.push_back(new_segment);
@@ -98,6 +107,7 @@ int main(void)
     //--------------------------------------------------------------------------------------
 
 	Snake my_snake {{{5,5}}, 1, 0};
+	my_snake.grow(3);
 
     InitWindow(screen_width, screen_height, "Snake!");
 
@@ -105,6 +115,7 @@ int main(void)
     //--------------------------------------------------------------------------------------
 
     int frame_cnt = 0;
+    int game_cnt = 0;
 
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
@@ -121,10 +132,31 @@ int main(void)
     	}
 
     	my_snake.process_key();
-    	if (frame_cnt >=15)
+    	if (frame_cnt >=10)
     	{
-			my_snake.do_move();
-			frame_cnt = 0;
+
+			if ((my_snake.segments[my_snake.segments.size()-1].x <=0)
+				or (my_snake.segments[my_snake.segments.size()-1].y <=0)
+				or (my_snake.segments[my_snake.segments.size()-1].x >= screen_width/block_size-1)
+				or (my_snake.segments[my_snake.segments.size()-1].y >= screen_height/block_size-1  ))
+			{
+				DrawText("Game Over, Press SPACE", 50 , screen_height - 200, 50, BLACK);
+				game_cnt++;
+				if (game_cnt>=200)
+					break;
+				else if (IsKeyDown(KEY_SPACE))
+				{
+					my_snake.segments= {{5,5}};
+					my_snake.speed_x=1;
+					my_snake.speed_y=0;
+					my_snake.grow(3);
+				}
+			} else
+			{
+				my_snake.do_move();
+				frame_cnt = 0;
+			}
+
     	}
         // Draw
         //----------------------------------------------------------------------------------
