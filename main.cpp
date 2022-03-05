@@ -1,5 +1,8 @@
 #include "raylib.h"
 #include <vector>
+#include <time.h>
+#include <iostream>
+#include <string>
 
 const int screen_width = 800;
 const int screen_height = 600;
@@ -20,14 +23,23 @@ struct SnakeSegment
 
 		DrawRectangle(start_x, start_y, size, size, Fade(BLUE, 0.5f));
 	}
-	void drawhead()
+	void drawhead(int speed_x, int speed_y)
 		{
 			auto start_x {x * block_size + pad};
 			auto start_y {y * block_size + pad};
 
 			auto size {block_size - 2*pad};
-
-			DrawCircle(start_x+size/2, start_y+size/2, block_size/2, Fade(BLUE, 0.9f));
+			auto Headcenter_x {start_x+size/2};
+			auto Headcenter_y {start_y+size/2};
+			auto Headradius {block_size/2};
+			auto eye1_x  {Headcenter_x - Headradius/2*speed_y};
+			auto eye1_y  {Headcenter_y + Headradius/2*speed_x};
+			auto eye2_x  {Headcenter_x + Headradius/2*speed_y};
+			auto eye2_y  {Headcenter_y - Headradius/2*speed_x};
+			auto eye_radius {Headradius/5};
+			DrawCircle(Headcenter_x, Headcenter_y, Headradius, Fade(GREEN, 0.7f));
+			DrawCircle(eye1_x, eye1_y, eye_radius, Fade(RED, 0.9f));
+			DrawCircle(eye2_x, eye2_y, eye_radius, Fade(BLUE, 0.9f));
 		}
 
 	void move(int dx, int dy)
@@ -48,7 +60,11 @@ struct Snake
 		for (unsigned int i = 0; i < segments.size()-1; ++i) {
 			segments[i].draw();
 		}
-		segments[segments.size()-1].drawhead();
+		segments[segments.size()-1].drawhead(speed_x, speed_y);
+	}
+	SnakeSegment head()
+	{
+		return segments[segments.size()-1];
 	}
 
 	void move(int dx, int dy)
@@ -100,7 +116,43 @@ struct Snake
 		}
 	}
 };
+struct food_block
+{
+	int x;
+	int y;
 
+	void draw()//(Color color)
+	{
+		auto center_x {x * block_size + block_size/2};
+		auto center_y {y * block_size + block_size/2};
+
+		auto radius {block_size / 2};
+
+		DrawCircle(center_x, center_y, radius, Fade(RED, 0.9f));
+	}
+	void renew()
+	{
+		x = rand()%(screen_width/block_size);
+		y = rand()%(screen_height/block_size);
+	}
+};
+bool colision(SnakeSegment snake_head, food_block food)
+{
+	if ((snake_head.x == food.x) and (snake_head.y == food.y))
+		return true;
+	else
+		return false;
+};
+bool self_colision(Snake snake)
+{
+	bool colid {false};
+	for (unsigned int i = 0; i < snake.segments.size()-1; ++i) {
+		if ((snake.head().x == snake.segments[i].x) and (snake.head().y == snake.segments[i].y)){
+			colid = true;
+		}
+	}
+	return colid;
+};
 int main(void)
 {
     // Initialization
@@ -108,6 +160,11 @@ int main(void)
 
 	Snake my_snake {{{5,5}}, 1, 0};
 	my_snake.grow(3);
+	srand(time(0));
+	std::cout << rand() << "\n";
+	food_block food {rand()%(screen_width/block_size), rand()%(screen_height/block_size)};
+	int score=0;
+//	food.draw(); //wrong place for drawing!!!!
 
     InitWindow(screen_width, screen_height, "Snake!");
 
@@ -132,13 +189,15 @@ int main(void)
     	}
 
     	my_snake.process_key();
-    	if (frame_cnt >=10)
+    	if (frame_cnt >=15)
     	{
 
-			if ((my_snake.segments[my_snake.segments.size()-1].x <=0)
-				or (my_snake.segments[my_snake.segments.size()-1].y <=0)
-				or (my_snake.segments[my_snake.segments.size()-1].x >= screen_width/block_size-1)
-				or (my_snake.segments[my_snake.segments.size()-1].y >= screen_height/block_size-1   ))
+			if ((my_snake.segments[my_snake.segments.size()-1].x < 0) //kept to show complexity
+				or (my_snake.head().y < 0)
+				or (my_snake.head().x > screen_width/block_size-1)
+				or (my_snake.head().y > screen_height/block_size-1)
+				//or (self_colision(my_snake))
+				)
 			{
 				DrawText("Game Over, Press SPACE", 50 , screen_height - 200, 50, BLACK);
 				game_cnt++;
@@ -155,6 +214,14 @@ int main(void)
 			{
 				my_snake.do_move();
 				frame_cnt = 0;
+			//	DrawText(std::to_string(score), 50 , screen_height - 50, 10, BLACK);
+				if (colision(my_snake.head(), food))
+				{
+					my_snake.grow(1);
+					food.renew();
+					score +=100;
+				};
+
 			}
 
     	}
@@ -165,6 +232,7 @@ int main(void)
             ClearBackground(RAYWHITE);
 
             my_snake.draw();
+            food.draw();
 
 
             //DrawText("Snake!", 50 , screen_height - 60, 40, LIGHTGRAY);
