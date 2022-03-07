@@ -8,6 +8,7 @@ const int screen_width = 800;
 const int screen_height = 600;
 const int block_size = 20;
 const int pad = 1;
+const int block_num {10};
 
 struct SnakeSegment
 {
@@ -135,17 +136,18 @@ struct food_block
 		auto start_x {x * block_size + pad};
 		auto start_y {y * block_size + pad};
 		auto size {block_size - 2*pad};
-		DrawRectangle(start_x, start_y, size, size, Fade(color, 0.9f));
+		DrawRectangle(start_x, start_y, size, size, Fade(color, 1.0f));
 	}
 	void renew()
 	{
-		x = rand()%(screen_width/block_size);
-		y = rand()%(screen_height/block_size);
-		//if ((block_segment.x != food.x) or (block_segment.y != food.y))
+		x = rand()%(screen_width/block_size-2)+1;
+		y = rand()%(screen_height/block_size-2)+1;
+//		for (unsigned int i = 0; i < block_num; ++i) {
+			//if ((block_segment.x != food.x) or (block_segment.y != food.y))
 	}
 };
 
-bool colision(SnakeSegment snake_head, food_block food)
+bool feeding(SnakeSegment snake_head, food_block food)
 {
 	if ((snake_head.x == food.x) and (snake_head.y == food.y))
 		return true;
@@ -166,10 +168,25 @@ bool self_colision(Snake snake)
 bool block_colision(Snake snake, std::vector<food_block> blocks)
 {
 	bool colid {false};
-	for (unsigned int i = 1; i < blocks.size(); ++i) {
+	for (unsigned int i = 0; i < blocks.size(); ++i) {
 		if ((snake.head().x == blocks[i].x) and (snake.head().y == blocks[i].y)){
 			colid = true;
 		//	std::cout << i << "\n";
+		}
+	}
+	return colid;
+};
+bool food_colision(food_block food, Snake snake, std::vector<food_block> blocks)
+{
+	bool colid {false};
+	for (unsigned int i = 0; i < blocks.size(); ++i) {
+		if ((food.x == blocks[i].x) and (food.y == blocks[i].y)){
+			colid = true;
+		}
+	}
+	for (unsigned int i = 0; i < snake.segments.size(); ++i) {
+		if ((food.x == snake.segments[i].x) and (food.y == snake.segments[i].y)){
+			colid = true;
 		}
 	}
 	return colid;
@@ -183,15 +200,32 @@ int main(void)
 	my_snake.grow(3);
 	srand(time(0));
 //	std::cout << rand() << "\n";
-	food_block food; //{rand()%(screen_width/block_size), rand()%(screen_height/block_size)};
-	food.renew();
+	food_block food {rand()%(screen_width/block_size), rand()%(screen_height/block_size)};
+	//food.renew();
 	int score=0;
-	unsigned int block_num {10};
 	std::vector<food_block> blocks {};
+	food_block block_segment;
 	for (unsigned int i = 0; i < block_num; ++i) {
-		food_block block_segment {rand()%(screen_width/block_size), rand()%(screen_height/block_size)};
-		blocks.push_back(block_segment); //max number of blocks is block_num
+		block_segment= {rand()%(screen_width/block_size-2)+1, rand()%(screen_height/block_size-2)+1};
+		if (!feeding(my_snake.head(),block_segment))
+			blocks.push_back(block_segment);
 	}
+	for (int i = 0; i < (screen_width/block_size); ++i) {
+		block_segment= {i, 0};
+		blocks.push_back(block_segment);
+		block_segment= {i, screen_height/block_size -1};
+		blocks.push_back(block_segment);
+	}
+	for (int i = 0; i < (screen_height/block_size); ++i) {
+		block_segment= {0, i};
+		blocks.push_back(block_segment);
+		block_segment= {screen_width/block_size -1, i};
+		blocks.push_back(block_segment);
+	}
+	while (food_colision(food, my_snake, blocks)) {
+		food.renew();
+	}
+
 
 //	food.draw(); //wrong place for drawing!!!!
 
@@ -217,10 +251,10 @@ int main(void)
 
     	my_snake.process_key();
 		std::string score_text=std::to_string(score);
-		DrawText(score_text.c_str(), 50 , screen_height - 50, 50, BLACK);
+		DrawText(score_text.c_str(), 30 , screen_height - 70, 50, BLACK);
     	if (frame_cnt >=15)
     	{
-			if ((my_snake.segments[0].x < 0)
+			if ((my_snake.segments[0].x < 0)	//screen boundary checks can be ignored due to block frame as play window
 				or (my_snake.head().y < 0)
 				or (my_snake.head().x > screen_width/block_size-1)
 				or (my_snake.head().y > screen_height/block_size-1)
@@ -243,11 +277,14 @@ int main(void)
 			{
 				my_snake.do_move();
 				frame_cnt = 0;
-			if (colision(my_snake.head(), food))
+			if (feeding(my_snake.head(), food))
 				{
 					my_snake.grow(1);
-					food.renew();
-					score +=100;
+					while (food_colision(food, my_snake, blocks)) {
+						food.renew();
+					}
+
+					score +=100*my_snake.segments.size();
 				};
 
 			}
@@ -261,7 +298,7 @@ int main(void)
 
             my_snake.draw();
             food.drawfood(GREEN);
-            for (unsigned int i = 0; i < block_num; ++i) {
+            for (unsigned int i = 0; i < blocks.size(); ++i) {
             	blocks[i].drawblock(RED);
 			}
 
