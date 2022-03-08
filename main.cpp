@@ -10,7 +10,7 @@ const int block_size = 20;
 const int pad = 1;
 const int block_num {10};
 
-struct SnakeSegment
+struct Segment
 {
 	int x;
 	int y;
@@ -37,7 +37,7 @@ struct SnakeSegment
 			auto eye1_y  {Headcenter_y + Headradius/2*speed_x};
 			auto eye2_x  {Headcenter_x + Headradius/2*speed_y};
 			auto eye2_y  {Headcenter_y - Headradius/2*speed_x};
-			auto eye_radius {Headradius/5};
+			auto eye_radius {Headradius/3};
 			DrawCircle(Headcenter_x, Headcenter_y, Headradius, Fade(GREEN, 0.7f));
 			DrawCircle(eye1_x, eye1_y, eye_radius, Fade(RED, 0.9f));
 			DrawCircle(eye2_x, eye2_y, eye_radius, Fade(BLUE, 0.9f));
@@ -50,9 +50,9 @@ struct SnakeSegment
 	}
 };
 
-struct Snake
+struct MultiSegment
 {
-	std::vector<SnakeSegment> segments;
+	std::vector<Segment> segments;
 	int speed_x;
 	int speed_y;
 
@@ -63,7 +63,7 @@ struct Snake
 		}
 		segments[0].drawhead(speed_x, speed_y); //segment-0 is head, and last segment is tail
 	}
-	SnakeSegment head()
+	Segment head()
 	{
 		return segments[0];
 	}
@@ -110,7 +110,7 @@ struct Snake
 	{
 		auto tail_index {segments.size() - 1}; //grow from tail
 
-		SnakeSegment new_segment{ segments[tail_index].x, segments[tail_index].y};
+		Segment new_segment{ segments[tail_index].x, segments[tail_index].y};
 
 		for (int i = 0; i < num_segment; ++i) {
 			segments.push_back(new_segment);
@@ -147,36 +147,36 @@ struct food_block
 	}
 };
 
-bool feeding(SnakeSegment snake_head, food_block food)
+bool feeding(Segment snake_head, food_block food)
 {
 	if ((snake_head.x == food.x) and (snake_head.y == food.y))
 		return true;
 	else
 		return false;
 };
-bool self_colision(Snake snake)
+bool self_colision(MultiSegment MultiSegment)
 {
 	bool colid {false};
-	for (unsigned int i = 1; i < snake.segments.size(); ++i) {
-		if ((snake.head().x == snake.segments[i].x) and (snake.head().y == snake.segments[i].y)){
+	for (unsigned int i = 1; i < MultiSegment.segments.size(); ++i) {
+		if ((MultiSegment.head().x == MultiSegment.segments[i].x) and (MultiSegment.head().y == MultiSegment.segments[i].y)){
 			colid = true;
 		//	std::cout << i << "\n";
 		}
 	}
 	return colid;
 };
-bool block_colision(Snake snake, std::vector<food_block> blocks)
+bool block_colision(MultiSegment MultiSegment, std::vector<food_block> blocks)
 {
 	bool colid {false};
 	for (unsigned int i = 0; i < blocks.size(); ++i) {
-		if ((snake.head().x == blocks[i].x) and (snake.head().y == blocks[i].y)){
+		if ((MultiSegment.head().x == blocks[i].x) and (MultiSegment.head().y == blocks[i].y)){
 			colid = true;
 		//	std::cout << i << "\n";
 		}
 	}
 	return colid;
 };
-bool food_colision(food_block food, Snake snake, std::vector<food_block> blocks)
+bool food_colision(food_block food, MultiSegment MultiSegment, std::vector<food_block> blocks)
 {
 	bool colid {false};
 	for (unsigned int i = 0; i < blocks.size(); ++i) {
@@ -184,8 +184,8 @@ bool food_colision(food_block food, Snake snake, std::vector<food_block> blocks)
 			colid = true;
 		}
 	}
-	for (unsigned int i = 0; i < snake.segments.size(); ++i) {
-		if ((food.x == snake.segments[i].x) and (food.y == snake.segments[i].y)){
+	for (unsigned int i = 0; i < MultiSegment.segments.size(); ++i) {
+		if ((food.x == MultiSegment.segments[i].x) and (food.y == MultiSegment.segments[i].y)){
 			colid = true;
 		}
 	}
@@ -196,7 +196,7 @@ int main(void)
     // Initialization
     //--------------------------------------------------------------------------------------
 
-	Snake my_snake {{{5,5},{4,5}}, 1, 0};
+	MultiSegment my_snake {{{5,5},{4,5}}, 1, 0};
 	my_snake.grow(3);
 	srand(time(0));
 //	std::cout << rand() << "\n";
@@ -229,7 +229,7 @@ int main(void)
 
 //	food.draw(); //wrong place for drawing!!!!
 
-    InitWindow(screen_width, screen_height, "Snake!");
+    InitWindow(screen_width, screen_height, "Snake Game!");
 
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
@@ -267,11 +267,11 @@ int main(void)
 					break;
 				else if (IsKeyDown(KEY_SPACE))
 				{
-				//	my_snake {{{5,5},{4,5}}, 1, 0}
-					my_snake.segments= {{5,5},{4,5}};
-					my_snake.speed_x=1;
-					my_snake.speed_y=0;
-					my_snake.grow(3);
+					my_snake = {{{5,5},{4,5}}, 1, 0};
+//					my_snake.segments= {{5,5},{4,5}};
+//					my_snake.speed_x=1;
+//					my_snake.speed_y=0;
+//					my_snake.grow(3);
 				}
 			} else
 			{
@@ -302,7 +302,7 @@ int main(void)
             	blocks[i].drawblock(RED);
 			}
 
-            //DrawText("Snake!", 50 , screen_height - 60, 40, LIGHTGRAY);
+            //DrawText("Snake Game!", 50 , screen_height - 60, 40, LIGHTGRAY);
 
             //DrawFPS(10, 10);
 
